@@ -12,7 +12,7 @@
   },
   "architecture": {
     "entryPoint": "src/index.ts",
-    "mainClass": "MyMCP extends McpAgent",
+    "mainClass": "ZenbookerMCP extends McpAgent",
     "serverEndpoint": "/sse",
     "patterns": [
       "MCP Agent Pattern: Extend McpAgent class",
