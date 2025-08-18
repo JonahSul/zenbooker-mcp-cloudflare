@@ -1,7 +1,7 @@
 {
-	"name": "remote-mcp-server-authless",
-	"version": "0.0.0",
-	"private": true,
+	"name": "zenbooker-mcp-cloudflare",
+	"version": "0.0.1",
+	"private": false,
 	"scripts": {
 		"deploy": "wrangler deploy",
 		"dev": "wrangler dev",
