@@ -1,0 +1,180 @@
+# Zenbooker MCP Server Development Rules
+
+## Project Overview
+This is a **Zenbooker MCP (Model Context Protocol) Server** built on Cloudflare Workers. It provides comprehensive API access to Zenbooker's home service business management platform.
+
+## Key Architecture Lessons Learned
+
+### 1. Durable Objects & Environment Variables
+**CRITICAL**: Environment variables set in the main Worker don't automatically persist into Durable Object execution contexts.
+
+**Problem**: Global variables like `globalApiKey` set in the fetch handler don't work in Durable Object tools.
+```typescript
+// ❌ This doesn't work in Durable Objects
+let globalApiKey: string | undefined;
+ZenbookerMCP.setApiKey(env.ZENBOOKER_API_KEY); // Set in main worker
+// Tools in Durable Object can't access globalApiKey
+```
+
+**Solution**: Access environment variables directly in the Durable Object context.
+```typescript
+// ✅ This works in Durable Objects
+private getEnvironmentApiKey(): string | undefined {
+    return (this as any).env?.ZENBOOKER_API_KEY || globalApiKey;
+}
+```
+
+### 2. McpAgent Framework Requirements
+- `McpAgent` requires Durable Object configuration in `wrangler.jsonc`
+- Must have `MCP_OBJECT` binding configured
+- Removing Durable Object config causes "Could not find McpAgent binding" errors
+- Constructor is protected - cannot instantiate directly in tests
+
+### 3. Configuration Dependencies
+**wrangler.jsonc** must include:
+```jsonc
+{
+  "migrations": [
+    {
+      "new_sqlite_classes": ["ZenbookerMCP"],
+      "tag": "v1"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "class_name": "ZenbookerMCP",
+        "name": "MCP_OBJECT"
+      }
+    ]
+  }
+}
+```
+
+**After config changes**: Always run `npx wrangler types` to regenerate TypeScript definitions.
+
+### 4. Testing Strategy
+
+#### Local Testing Challenges
+- Cloudflare Workers code uses `cloudflare:` protocol imports that don't work in Node.js tests
+- Environment variables need to be set differently for tests vs production
+- Durable Object isolation makes unit testing complex
+
+#### Best Practices
+1. **Test helper functions in isolation**: Copy functions to test files to avoid import issues
+2. **Use mocks for external APIs**: Mock `fetch` for API calls
+3. **Test business logic separately**: Extract pure functions for easier testing
+4. **Integration tests with real env vars**: Set `ZENBOOKER_API_KEY` for actual API testing
+
+### 5. API Key Management
+**Secrets vs Environment Variables**:
+- Use `wrangler secret put ZENBOOKER_API_KEY` for sensitive values
+- Secrets are accessible as `env.ZENBOOKER_API_KEY` in the Worker
+- Global variables don't persist across Durable Object boundaries
+
+### 6. Debugging Workflow
+1. **Test locally first**: Use test suite before deploying
+2. **Use console.log strategically**: Add logging to understand execution flow
+3. **Check wrangler logs**: Use `npx wrangler tail` for real-time debugging
+4. **Validate TypeScript**: Run `npx tsc --noEmit` before deployment
+5. **Step-by-step deployment**: Make one change, test, deploy, verify
+
+### 7. API Integration Best Practices
+- Always check API documentation for exact field requirements
+- Handle API errors gracefully with descriptive messages
+- Use proper HTTP status codes and error responses
+- Validate inputs before making API calls
+
+## Development Commands
+
+### Essential Commands
+```bash
+# Type checking
+npx tsc --noEmit
+
+# Run tests
+npm run test:run
+
+# Deploy to Cloudflare
+npx wrangler deploy
+
+# View logs
+npx wrangler tail
+
+# Manage secrets
+npx wrangler secret list
+npx wrangler secret put ZENBOOKER_API_KEY
+
+# Regenerate types after config changes
+npx wrangler types
+```
+
+### Testing with Environment Variables
+```bash
+# Set env var for testing
+export ZENBOOKER_API_KEY="your-api-key"
+npm run test:run
+
+# Or inline
+ZENBOOKER_API_KEY="your-api-key" npm run test:run
+```
+
+## Code Patterns
+
+### Tool Definition Pattern
+```typescript
+this.server.tool(
+    "tool_name",
+    {
+        param: z.string().describe("Clear description of what this parameter does"),
+        optional_param: z.string().optional().describe("Optional parameter description"),
+    },
+    async (params) => {
+        // Use this.getEnvironmentApiKey() for API key access
+        const result = await makeZenbookerRequest(endpoint, method, params, this.getEnvironmentApiKey());
+        return {
+            content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        };
+    }
+);
+```
+
+### Error Handling Pattern
+```typescript
+if (!apiKey) {
+    throw new Error("Zenbooker API key is required. Please set the ZENBOOKER_API_KEY environment variable.");
+}
+```
+
+## Common Pitfalls to Avoid
+
+1. **Don't remove Durable Object config** - McpAgent requires it
+2. **Don't rely on global variables in tools** - Use instance methods instead
+3. **Don't skip type regeneration** - Always run `wrangler types` after config changes
+4. **Don't test in production** - Use local testing and staging environments
+5. **Don't forget to handle API errors** - Zenbooker API returns structured error responses
+
+## External API Documentation
+- Zenbooker API Reference: https://developers.zenbooker.com/reference/introduction
+- Requires authentication to view detailed schemas
+- Use live API testing to understand field requirements when docs are incomplete
+
+## File Structure
+```
+src/
+  index.ts              # Main MCP agent implementation
+tests/
+  *.test.ts            # Test files (avoid cloudflare: imports)
+  setup.ts             # Test configuration
+  helpers.ts           # Test utilities
+  mocks.ts             # API mocks
+wrangler.jsonc         # Cloudflare Workers configuration
+worker-configuration.d.ts  # Generated types (don't edit manually)
+```
+
+## Remember
+- **Environment isolation** is the #1 cause of "working locally but not in production" issues
+- **Always test the deployment** after making configuration changes
+- **Use the test suite** to catch issues before deployment
+- **Check logs immediately** after deployment to verify functionality
+- **One change at a time** when debugging complex issues

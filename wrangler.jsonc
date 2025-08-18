@@ -7,13 +7,27 @@
  * https://developers.cloudflare.com/workers/wrangler/configuration/
  */
 {
+	// Path to Wrangler's JSON schema that enables editor validation.
 	"$schema": "node_modules/wrangler/config-schema.json",
+
+	// Logical name for this Worker. Used by Wrangler and Cloudflare.
 	"name": "zenbooker-mcp",
+
+	// Entry point for the Worker runtime build.
 	"main": "src/index.ts",
+
+	// Compatibility date pins runtime behavior for Workers APIs.
+	// Update this if you intentionally require newer runtime semantics.
 	"compatibility_date": "2025-03-10",
+
+	// Optional runtime flags (enable compatibility shims or features).
+	// Keep only the flags you need; here we enable Node.js compatibility shims.
 	"compatibility_flags": [
 		"nodejs_compat"
 	],
+
+	// Migration metadata for durable resources (required for MCP agent).
+	// Wrangler uses this to deploy resource migrations in order.
 	"migrations": [
 		{
 			"new_sqlite_classes": [
@@ -22,6 +36,9 @@
 			"tag": "v1"
 		}
 	],
+
+	// Durable Objects bindings let your Worker talk to Durable Object classes.
+	// "name" is the global binding name your code references; "class_name" is the class defined in source.
 	"durable_objects": {
 		"bindings": [
 			{
@@ -30,6 +47,9 @@
 			}
 		]
 	},
+
+	// Observability enables Cloudflare's telemetry for this Worker (logs/metrics/traces).
+	// Set to false to disable reporting during local development if desired.
 	"observability": {
 		"enabled": true
 	}

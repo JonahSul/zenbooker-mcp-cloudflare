@@ -4,7 +4,7 @@ import { z } from "zod";
 
 // Interface for environment variables
 interface Env {
-	ZENBOOKER_API_KEY: string;
+	ZENBOOKER_API_KEY?: string;
 }
 
 // Zenbooker API base URL
@@ -17,13 +17,16 @@ async function makeZenbookerRequest(
 	body?: any,
 	apiKey?: string
 ) {
-	if (!apiKey) {
-		throw new Error("Zenbooker API key is required");
+	// Try to get API key from parameter, then global, then environment
+	const effectiveApiKey = apiKey || globalApiKey;
+	
+	if (!effectiveApiKey) {
+		throw new Error("Zenbooker API key is required. Please set the ZENBOOKER_API_KEY environment variable.");
 	}
 
 	const url = `${ZENBOOKER_API_BASE}${endpoint}`;
 	const headers: HeadersInit = {
-		"Authorization": `Bearer ${apiKey}`,
+		"Authorization": `Bearer ${effectiveApiKey}`,
 		"Content-Type": "application/json",
 	};
 
@@ -64,6 +67,13 @@ export class ZenbookerMCP extends McpAgent {
 		return globalApiKey;
 	}
 
+	// Override to get environment from the Durable Object state
+	private getEnvironmentApiKey(): string | undefined {
+		// In Durable Object context, we need to get the env from the state
+		// The McpAgent framework should provide access to this
+		return (this as any).env?.ZENBOOKER_API_KEY || globalApiKey;
+	}
+
 	async init() {
 		// ========== JOBS ENDPOINTS ==========
 		
@@ -87,7 +97,7 @@ export class ZenbookerMCP extends McpAgent {
 				});
 				
 				const endpoint = `/jobs${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
-				const result = await makeZenbookerRequest(endpoint, "GET", undefined, ZenbookerMCP.getApiKey());
+				const result = await makeZenbookerRequest(endpoint, "GET", undefined, this.getEnvironmentApiKey());
 				
 				return {
 					content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
@@ -102,7 +112,7 @@ export class ZenbookerMCP extends McpAgent {
 				id: z.string().describe("The unique job ID to retrieve detailed information for"),
 			},
 			async ({ id }) => {
-				const result = await makeZenbookerRequest(`/jobs/${id}`, "GET", undefined, ZenbookerMCP.getApiKey());
+				const result = await makeZenbookerRequest(`/jobs/${id}`, "GET", undefined, this.getEnvironmentApiKey());
 				return {
 					content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
 				};
@@ -130,7 +140,7 @@ export class ZenbookerMCP extends McpAgent {
 				});
 				
 				const endpoint = `/customers${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
-				const result = await makeZenbookerRequest(endpoint, "GET", undefined, globalApiKey);
+				const result = await makeZenbookerRequest(endpoint, "GET", undefined, this.getEnvironmentApiKey());
 				
 				return {
 					content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
@@ -145,7 +155,7 @@ export class ZenbookerMCP extends McpAgent {
 				id: z.string().describe("The unique customer ID to retrieve detailed information for"),
 			},
 			async ({ id }) => {
-				const result = await makeZenbookerRequest(`/customers/${id}`, "GET", undefined, globalApiKey);
+				const result = await makeZenbookerRequest(`/customers/${id}`, "GET", undefined, this.getEnvironmentApiKey());
 				return {
 					content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
 				};
@@ -167,7 +177,8 @@ export class ZenbookerMCP extends McpAgent {
 				notes: z.string().optional().describe("Additional notes or comments about the customer"),
 			},
 			async (params) => {
-				const result = await makeZenbookerRequest("/customers", "POST", params, globalApiKey);
+				console.log("create_customer called, global API key:", this.getEnvironmentApiKey() ? "SET" : "NOT SET");
+				const result = await makeZenbookerRequest("/customers", "POST", params, this.getEnvironmentApiKey());
 				return {
 					content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
 				};
@@ -190,7 +201,7 @@ export class ZenbookerMCP extends McpAgent {
 				notes: z.string().optional().describe("Updated notes or comments about the customer"),
 			},
 			async ({ id, ...params }) => {
-				const result = await makeZenbookerRequest(`/customers/${id}`, "PATCH", params, globalApiKey);
+				const result = await makeZenbookerRequest(`/customers/${id}`, "PATCH", params, this.getEnvironmentApiKey());
 				return {
 					content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
 				};
@@ -219,7 +230,7 @@ export class ZenbookerMCP extends McpAgent {
 				});
 				
 				const endpoint = `/invoices${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
-				const result = await makeZenbookerRequest(endpoint, "GET", undefined, globalApiKey);
+				const result = await makeZenbookerRequest(endpoint, "GET", undefined, this.getEnvironmentApiKey());
 				
 				return {
 					content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
@@ -234,7 +245,7 @@ export class ZenbookerMCP extends McpAgent {
 				id: z.string().describe("The unique invoice ID to retrieve detailed information for"),
 			},
 			async ({ id }) => {
-				const result = await makeZenbookerRequest(`/invoices/${id}`, "GET", undefined, globalApiKey);
+				const result = await makeZenbookerRequest(`/invoices/${id}`, "GET", undefined, this.getEnvironmentApiKey());
 				return {
 					content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
 				};
@@ -263,7 +274,7 @@ export class ZenbookerMCP extends McpAgent {
 				});
 				
 				const endpoint = `/transactions${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
-				const result = await makeZenbookerRequest(endpoint, "GET", undefined, globalApiKey);
+				const result = await makeZenbookerRequest(endpoint, "GET", undefined, this.getEnvironmentApiKey());
 				
 				return {
 					content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
@@ -290,7 +301,7 @@ export class ZenbookerMCP extends McpAgent {
 				});
 				
 				const endpoint = `/team_members${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
-				const result = await makeZenbookerRequest(endpoint, "GET", undefined, globalApiKey);
+				const result = await makeZenbookerRequest(endpoint, "GET", undefined, this.getEnvironmentApiKey());
 				
 				return {
 					content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
@@ -318,7 +329,7 @@ export class ZenbookerMCP extends McpAgent {
 				});
 				
 				const endpoint = `/recurring${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
-				const result = await makeZenbookerRequest(endpoint, "GET", undefined, globalApiKey);
+				const result = await makeZenbookerRequest(endpoint, "GET", undefined, this.getEnvironmentApiKey());
 				
 				return {
 					content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
@@ -344,7 +355,7 @@ export class ZenbookerMCP extends McpAgent {
 				});
 				
 				const endpoint = `/territories${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
-				const result = await makeZenbookerRequest(endpoint, "GET", undefined, globalApiKey);
+				const result = await makeZenbookerRequest(endpoint, "GET", undefined, this.getEnvironmentApiKey());
 				
 				return {
 					content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
@@ -369,7 +380,7 @@ export class ZenbookerMCP extends McpAgent {
 				min_order_value: z.number().optional().describe("Minimum order value required to use this coupon (in dollars)"),
 			},
 			async (params) => {
-				const result = await makeZenbookerRequest("/coupons", "POST", params, globalApiKey);
+				const result = await makeZenbookerRequest("/coupons", "POST", params, this.getEnvironmentApiKey());
 				return {
 					content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
 				};
@@ -382,8 +393,16 @@ export default {
 	fetch(request: Request, env: Env, ctx: ExecutionContext) {
 		const url = new URL(request.url);
 
-		// Set the API key from environment variables
-		ZenbookerMCP.setApiKey(env.ZENBOOKER_API_KEY);
+		// Set the API key from environment variables if available
+		if (env.ZENBOOKER_API_KEY) {
+			ZenbookerMCP.setApiKey(env.ZENBOOKER_API_KEY);
+			console.log("API key set from environment:", env.ZENBOOKER_API_KEY ? "YES" : "NO");
+		} else {
+			console.warn("ZENBOOKER_API_KEY environment variable not found");
+		}
+
+		// Log the current state
+		console.log("Current global API key:", ZenbookerMCP.getApiKey() ? "SET" : "NOT SET");
 
 		if (url.pathname === "/sse" || url.pathname === "/sse/message") {
 			return ZenbookerMCP.serveSSE("/sse").fetch(request, env, ctx);
