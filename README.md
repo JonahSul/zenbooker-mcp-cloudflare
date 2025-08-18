@@ -1,6 +1,10 @@
-# Building a Remote MCP Server on Cloudflare (Without Auth)
+# Zenbooker MCP Server on Cloudflare Workers
 
-This example allows you to deploy a remote MCP server that doesn't require authentication on Cloudflare Workers. 
+This MCP server provides comprehensive access to the Zenbooker API for home service businesses. It includes tools for managing jobs, customers, invoices, transactions, team members, recurring bookings, territories, and coupons.
+
+## ⚠️ Important: API Key Required
+
+This server requires a Zenbooker API key to function. See the [Environment Variables](#environment-variables) section below.
 
 ## Get started: 
 
@@ -12,6 +16,55 @@ Alternatively, you can use the command line below to get the remote MCP Server c
 ```bash
 npm create cloudflare@latest -- my-mcp-server --template=cloudflare/ai/demos/remote-mcp-authless
 ```
+
+## Environment Variables
+
+Before deploying or running locally, you must set your Zenbooker API key:
+
+### For Local Development
+```bash
+cp .env.example .env
+# Edit .env and set your ZENBOOKER_API_KEY
+```
+
+### For Cloudflare Workers Deployment
+```bash
+wrangler secret put ZENBOOKER_API_KEY
+# Enter your Zenbooker API key when prompted
+```
+
+### Getting a Zenbooker API Key
+1. Log into your Zenbooker admin panel
+2. Navigate to Settings > Developers > API  
+3. Click "Create API Key"
+4. Copy the generated key
+
+## Available Tools
+
+The server provides 13 different tools for interacting with the Zenbooker API:
+
+### Jobs
+- `list_jobs` - List jobs with filtering options
+- `get_job` - Get specific job details
+
+### Customers  
+- `list_customers` - List customers with search/filtering
+- `get_customer` - Get specific customer details
+- `create_customer` - Create new customers
+- `update_customer` - Update existing customers
+
+### Invoices
+- `list_invoices` - List invoices with filtering
+- `get_invoice` - Get specific invoice details
+
+### Other Resources
+- `list_transactions` - List payment transactions
+- `list_team_members` - List service providers/staff
+- `list_recurring_bookings` - List scheduled recurring services
+- `list_territories` - List service areas
+- `create_coupon` - Create discount coupons
+
+For detailed parameter information, see [ZENBOOKER_README.md](./ZENBOOKER_README.md).
 
 ## Customizing your MCP Server
 
@@ -36,7 +89,7 @@ Update with this configuration:
 ```json
 {
   "mcpServers": {
-    "calculator": {
+    "zenbooker": {
       "command": "npx",
       "args": [
         "mcp-remote",
@@ -47,4 +100,4 @@ Update with this configuration:
 }
 ```
 
-Restart Claude and you should see the tools become available. 
+Restart Claude and you should see the Zenbooker tools become available. 

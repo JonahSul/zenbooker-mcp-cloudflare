@@ -1,0 +1,141 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-08-17",
+  "projectType": "mcp-server",
+  "description": "Model Context Protocol (MCP) Server Template for Cloudflare Workers",
+  "context": {
+    "projectName": "remote-mcp-server-authless",
+    "framework": "Cloudflare Workers + MCP SDK",
+    "language": "TypeScript",
+    "purpose": "Deploy authless MCP servers that can integrate with AI assistants",
+    "deployment": "Cloudflare Workers platform"
+  },
+  "architecture": {
+    "entryPoint": "src/index.ts",
+    "mainClass": "MyMCP extends McpAgent",
+    "serverEndpoint": "/sse",
+    "patterns": [
+      "MCP Agent Pattern: Extend McpAgent class",
+      "Tool Definition: Use this.server.tool() in init() method",
+      "Schema Validation: Zod for all input parameters",
+      "Response Format: { content: [{ type: 'text', text: 'result' }] }",
+      "Error Handling: Return errors in content array, not thrown exceptions"
+    ],
+    "sourceFiles": [
+      "index.ts"
+    ]
+  },
+  "dependencies": {
+    "runtime": "@modelcontextprotocol/sdk",
+    "agents": "agents",
+    "validation": "zod",
+    "devTools": [
+      "@biomejs/biome",
+      "wrangler",
+      "typescript"
+    ],
+    "versions": {
+      "@modelcontextprotocol/sdk": "1.17.1",
+      "agents": "^0.0.109",
+      "zod": "^3.25.67",
+      "@biomejs/biome": "^2.1.3",
+      "@types/node": "^24.3.0",
+      "typescript": "5.8.3",
+      "wrangler": "^4.30.0"
+    }
+  },
+  "conventions": {
+    "codeStyle": {
+      "formatter": "Biome",
+      "linter": "Biome",
+      "typeChecking": "strict",
+      "asyncPattern": "async/await"
+    },
+    "naming": {
+      "tools": "snake_case or camelCase",
+      "parameters": "camelCase",
+      "classes": "PascalCase",
+      "files": "camelCase.ts"
+    },
+    "toolDefinition": {
+      "structure": "this.server.tool(name, zodSchema, asyncHandler)",
+      "validation": "Always use Zod schemas for parameters",
+      "errorHandling": "Return { content: [{ type: 'text', text: 'Error: message' }] }",
+      "successFormat": "Return { content: [{ type: 'text', text: 'result' }] }"
+    }
+  },
+  "commonTasks": {
+    "addTool": [
+      "1. Add tool definition in init() method",
+      "2. Define Zod schema for parameters",
+      "3. Implement async handler function",
+      "4. Handle edge cases and errors",
+      "5. Return proper response format"
+    ],
+    "development": [
+      "npm run dev - Start local development server",
+      "npm run format - Format code with Biome",
+      "npm run lint:fix - Fix linting issues",
+      "npm run type-check - Check TypeScript types",
+      "npm run deploy - Deploy to Cloudflare Workers"
+    ],
+    "testing": [
+      "Test locally at localhost:8787/sse",
+      "Connect Claude Desktop via mcp-remote proxy",
+      "Test in Cloudflare AI Playground"
+    ]
+  },
+  "integrationPatterns": {
+    "claudeDesktop": {
+      "configLocation": "Settings > Developer > Edit Config",
+      "configFormat": {
+        "mcpServers": {
+          "serverName": {
+            "command": "npx",
+            "args": [
+              "mcp-remote",
+              "deployed-url/sse"
+            ]
+          }
+        }
+      }
+    },
+    "cloudflarePlayground": {
+      "url": "https://playground.ai.cloudflare.com/",
+      "connection": "Direct URL to deployed server/sse endpoint"
+    }
+  },
+  "bestPractices": [
+    "Always validate inputs with Zod schemas",
+    "Handle mathematical edge cases (division by zero, etc.)",
+    "Use meaningful tool names and descriptions",
+    "Keep tools focused and single-purpose",
+    "Return consistent response formats",
+    "Add proper error messages for user guidance",
+    "Test tools thoroughly before deployment",
+    "Keep bundle size minimal for Workers",
+    "Use environment variables for configuration"
+  ],
+  "troubleshooting": {
+    "toolNotAppearing": "Check tool registration in init() method and Zod schema syntax",
+    "runtimeErrors": "Verify async/await usage and error handling",
+    "deploymentIssues": "Check wrangler.jsonc configuration and account settings",
+    "typeErrors": "Run npm run type-check and fix TypeScript issues",
+    "connectionProblems": "Verify deployed URL ends with /sse endpoint"
+  },
+  "securityConsiderations": [
+    "This template is authless - add authentication for production",
+    "Validate all user inputs thoroughly",
+    "Consider rate limiting for public deployments",
+    "Review tool capabilities and permissions",
+    "Monitor for abuse and unusual usage patterns"
+  ],
+  "futureEnhancements": [
+    "Add authentication middleware",
+    "Implement comprehensive logging",
+    "Create tool discovery mechanisms",
+    "Add rate limiting and monitoring",
+    "Support tool categorization",
+    "Enhanced error reporting"
+  ]
+}

@@ -9,7 +9,12 @@
 		"lint:fix": "biome lint --fix",
 		"start": "wrangler dev",
 		"cf-typegen": "wrangler types",
-		"type-check": "tsc --noEmit"
+		"type-check": "tsc --noEmit",
+		"update-copilot": "node scripts/update-copilot-config.js",
+		"test": "vitest",
+		"test:run": "vitest run",
+		"test:coverage": "vitest run --coverage",
+		"test:integration": "vitest run tests/integration"
 	},
 	"dependencies": {
 		"@modelcontextprotocol/sdk": "1.17.1",
@@ -19,7 +24,10 @@
 	"devDependencies": {
 		"@biomejs/biome": "^2.1.3",
 		"@types/node": "^24.3.0",
+		"@vitest/coverage-v8": "^2.0.5",
 		"typescript": "5.8.3",
+		"undici": "^6.19.8",
+		"vitest": "^2.0.5",
 		"wrangler": "^4.30.0"
 	}
 }
