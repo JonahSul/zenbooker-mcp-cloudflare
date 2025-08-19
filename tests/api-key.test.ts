@@ -13,7 +13,23 @@ const mockZenbookerMCP = {
 	},
 	getApiKey: () => globalApiKey
 };
+// Define a minimal interface for ZenbookerMCP for type safety
+interface IZenbookerMCP {
+  setApiKey(key: string | undefined): void;
+  getApiKey(): string | undefined;
+}
 
+// Mock class implementing the interface
+class MockZenbookerMCP implements IZenbookerMCP {
+  setApiKey(key: string | undefined): void {
+    globalApiKey = key;
+  }
+  getApiKey(): string | undefined {
+    return globalApiKey;
+  }
+}
+
+const mockZenbookerMCP = new MockZenbookerMCP();
 // Import the helper function directly for testing
 const makeZenbookerRequest = async (
 	endpoint: string,
