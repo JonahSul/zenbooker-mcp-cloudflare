@@ -3,6 +3,10 @@
   "lastUpdated": "2025-08-17",
   "projectType": "mcp-server",
   "description": "Model Context Protocol (MCP) Server Template for Cloudflare Workers",
+  "instructions": {
+    "priority": "ALWAYS READ .cursorrules FILE FIRST before making any changes to this project. It contains critical development axioms and lessons learned.",
+    "developmentRules": "The .cursorrules file contains mandatory development patterns, testing strategies, and commit standards that must be followed."
+  },
   "context": {
     "projectName": "remote-mcp-server-authless",
     "framework": "Cloudflare Workers + MCP SDK",

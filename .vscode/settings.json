@@ -1,5 +1,30 @@
 {
 	"files.associations": {
-		"wrangler.json": "jsonc"
+		"wrangler.json": "jsonc",
+		".cursorrules": "markdown"
+	},
+	"vitest.enable": true,
+	"vitest.rootConfig": "./vitest.config.ts",
+	"vitest.commandLine": "npm run test",
+	"vitest.exclude": [
+		"**/tests/api-key.test.ts"
+	],
+	// Ensure .cursorrules is always visible and prioritized
+	"files.watcherExclude": {
+		"**/.cursorrules": false
+	},
+	"search.exclude": {
+		"**/.cursorrules": false
+	},
+	"files.exclude": {
+		"**/.cursorrules": false
+	},
+	// Pin important project files to the top of Explorer
+	"explorer.sortOrder": "type",
+	"explorer.fileNesting.enabled": false,
+	// Copilot should always consider .cursorrules
+	"github.copilot.advanced": {
+		"debug.overrideEngine": "copilot-chat",
+		"debug.useNodeFetcher": false
 	}
 }

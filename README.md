@@ -2,6 +2,10 @@
 
 This MCP server provides comprehensive access to the Zenbooker API for home service businesses. It includes tools for managing jobs, customers, invoices, transactions, team members, recurring bookings, territories, and coupons.
 
+## 🤖 For AI Assistants: READ .cursorrules FIRST
+
+**Before making any changes to this project, always read the [`.cursorrules`](.cursorrules) file.** It contains critical development axioms, architecture lessons learned, and project-specific patterns that must be followed.
+
 ## ⚠️ Important: API Key Required
 
 This server requires a Zenbooker API key to function. See the [Environment Variables](#environment-variables) section below.

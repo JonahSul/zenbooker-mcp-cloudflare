@@ -3,6 +3,50 @@
 ## Project Overview
 This is a **Zenbooker MCP (Model Context Protocol) Server** built on Cloudflare Workers. It provides comprehensive API access to Zenbooker's home service business management platform.
 
+## Core Development Axioms
+
+### 🚨 MANDATORY: Read This File First
+**Any AI assistant working on this project MUST read this entire .cursorrules file before making any changes.** This file contains critical project-specific knowledge, development patterns, and lessons learned that prevent common mistakes and ensure consistency.
+
+### 1. Dependency Management
+**Don't develop new functionality when there's an existing package that is being actively maintained that we can include instead.**
+- Always search npm/GitHub for existing solutions before building from scratch
+- Prioritize packages with active maintenance, good documentation, and TypeScript support
+- Consider package size and dependencies when evaluating options
+- Document the rationale for choosing or rejecting existing packages
+
+### 2. Continuous Learning & Self-Improvement
+**You should have the ability to refine your own instructions via the .cursorrules file, and should implement learnings from test iterations and user feedback to continually 'learn on the job'.**
+- Update these rules after discovering new patterns or solutions
+- Capture lessons learned from debugging sessions and failed approaches
+- Incorporate user feedback and test failures into improved guidance
+- Regularly review and refactor these rules for clarity and accuracy
+
+### 3. Comprehensive Testing Strategy
+**Unit test everything possible. Integration tests may be utilized only if they're integrating to a mock vendor service, but one for which the authentication mechanism can be mocked, so that the full request lifecycle can be tested.**
+- Every function, class method, and business logic unit must have corresponding tests
+- Mock external API calls using tools like `vitest` mocks or `msw`
+- Integration tests only for mocked external services where auth can be simulated
+- Aim for high test coverage while maintaining test quality and reliability
+
+### 4. Test-Driven Development (TDD)
+**Always iterate via the smallest logical units in TDD fashion: make it red, make it green, make it pretty.**
+- Write failing tests first (red phase)
+- Implement minimal code to make tests pass (green phase)
+- Refactor for clarity, performance, and maintainability (refactor phase)
+- Commit after each complete cycle
+- Keep changes small and focused on single responsibilities
+
+### 5. Commit Message Standards
+**Capture commits with explanatory messages after refactoring passes. Commit messages should be in this format: 'changes [or other present-tense verb] the [component] to [implement feature, fix problem, etc.]'**
+- Use present tense verbs: changes, adds, removes, fixes, updates, refactors
+- Clearly identify the component being modified
+- Explain the purpose or benefit of the change
+- Examples:
+  - "adds the customer search tool to enable filtering by service area"
+  - "refactors the API client to improve error handling consistency"
+  - "fixes the invoice creation validation to prevent duplicate charges"
+
 ## Key Architecture Lessons Learned
 
 ### 1. Durable Objects & Environment Variables
