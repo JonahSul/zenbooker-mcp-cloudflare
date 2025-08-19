@@ -1,0 +1,9 @@
+{
+	"servers": {
+		"zenbooker-mcp-cloudflare": {
+			"url": "https://zenbooker-mcp.sprinklerblowout.workers.dev/sse",
+			"type": "http"
+		}
+	},
+	"inputs": []
+}

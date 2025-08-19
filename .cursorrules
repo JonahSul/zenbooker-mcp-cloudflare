@@ -5,6 +5,9 @@ This is a **Zenbooker MCP (Model Context Protocol) Server** built on Cloudflare 
 
 ## Core Development Axioms
 
+### 🚨 MANDATORY: Read This File First
+**Any AI assistant working on this project MUST read this entire .cursorrules file before making any changes.** This file contains critical project-specific knowledge, development patterns, and lessons learned that prevent common mistakes and ensure consistency.
+
 ### 1. Dependency Management
 **Don't develop new functionality when there's an existing package that is being actively maintained that we can include instead.**
 - Always search npm/GitHub for existing solutions before building from scratch
