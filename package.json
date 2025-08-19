@@ -1,7 +1,7 @@
 {
 	"name": "zenbooker-mcp-cloudflare",
 	"version": "0.0.1",
-	"private": false,
+	"private": true,
 	"scripts": {
 		"deploy": "wrangler deploy",
 		"dev": "wrangler dev",
