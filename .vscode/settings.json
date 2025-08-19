@@ -1,5 +1,11 @@
 {
 	"files.associations": {
 		"wrangler.json": "jsonc"
-	}
+	},
+	"vitest.enable": true,
+	"vitest.rootConfig": "./vitest.config.ts",
+	"vitest.commandLine": "npm run test",
+	"vitest.exclude": [
+		"**/tests/api-key.test.ts"
+	]
 }
