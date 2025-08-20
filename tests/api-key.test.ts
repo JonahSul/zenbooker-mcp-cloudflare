@@ -6,13 +6,6 @@ import { TEST_API_KEY } from './setup';
 // Mock global API key for testing
 let globalApiKey: string | undefined;
 
-// Mock ZenbookerMCP class methods for testing
-const mockZenbookerMCP = {
-	setApiKey: (key: string | undefined) => {
-		globalApiKey = key;
-	},
-	getApiKey: () => globalApiKey
-};
 // Define a minimal interface for ZenbookerMCP for type safety
 interface IZenbookerMCP {
   setApiKey(key: string | undefined): void;
