@@ -6,9 +6,6 @@
 	"vitest.enable": true,
 	"vitest.rootConfig": "./vitest.config.ts",
 	"vitest.commandLine": "npm run test",
-	"vitest.exclude": [
-		"**/tests/api-key.test.ts"
-	],
 	// Ensure .cursorrules is always visible and prioritized
 	"files.watcherExclude": {
 		"**/.cursorrules": false
