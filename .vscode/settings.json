@@ -9,22 +9,43 @@
 	"vitest.exclude": [
 		"**/tests/api-key.test.ts"
 	],
-	// Ensure .cursorrules is always visible and prioritized
-	"files.watcherExclude": {
-		"**/.cursorrules": false
+	"vitest.coverage": {
+		"enabled": true,
+		"reporter": [
+			"text",
+			"html"
+		],
+		"reportOnFailure": true
 	},
-	"search.exclude": {
-		"**/.cursorrules": false
+	"editor.formatOnSave": true,
+	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": true,
+		"source.organizeImports": true
 	},
-	"files.exclude": {
-		"**/.cursorrules": false
+	"eslint.validate": [
+		"javascript",
+		"javascriptreact",
+		"typescript",
+		"typescriptreact",
+		"json",
+		"jsonc",
+		"markdown"
+	],
+	"eslint.alwaysShowStatus": true,
+	"eslint.format.enable": true,
+	"eslint.lintTask.enable": true,
+	"eslint.run": "onType",
+	"eslint.options": {
+		"configFile": ".eslintrc.json"
 	},
+	"eslint.nodePath": "./node_modules",
+	"eslint.workingDirectories": [
+		{
+			"mode": "autoDetectFromWorkspace"
+		}
+	],
 	// Pin important project files to the top of Explorer
 	"explorer.sortOrder": "type",
-	"explorer.fileNesting.enabled": false,
-	// Copilot should always consider .cursorrules
-	"github.copilot.advanced": {
-		"debug.overrideEngine": "copilot-chat",
-		"debug.useNodeFetcher": false
-	}
+	"explorer.fileNesting.enabled": false
 }
