@@ -12,8 +12,6 @@ interface ZenbookerEnvironment {
 	ZENBOOKER_API_KEY?: string;
 }
 
-
-
 /**
  * Global API key storage for the main Worker context
  * Note: This does not persist into Durable Object execution contexts
