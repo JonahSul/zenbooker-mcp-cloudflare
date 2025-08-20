@@ -34,29 +34,27 @@ interface GeocodingResult {
 
 /**
  * Geocode an address to get latitude and longitude coordinates
- * Using a simple geocoding service (you may want to use a more robust service)
+ * Using OpenStreetMap Nominatim API with proper error handling
  */
 async function geocodeAddress(address: string): Promise<Coordinates> {
-	// For now, we'll use a simple approach. In production, you'd want to use
-	// a proper geocoding service like Google Maps, MapBox, or similar
 	try {
 		const response = await fetch(
 			`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
 			{
 				headers: {
-					'User-Agent': 'ZenbookerMCP/1.0'
+					'User-Agent': 'ZenbookerMCP/1.0 (contact@example.com)'
 				}
 			}
 		);
 		
 		if (!response.ok) {
-			throw new Error(`Geocoding HTTP ${response.status}: ${response.statusText}`);
+			throw new Error(`HTTP ${response.status}: ${response.statusText}`);
 		}
 		
 		const data: GeocodingResult[] = await response.json();
 		
 		if (!data || data.length === 0) {
-			throw new Error(`Could not geocode address: ${address}`);
+			throw new Error(`No geocoding results found for address: ${address}`);
 		}
 		
 		return {
@@ -64,69 +62,47 @@ async function geocodeAddress(address: string): Promise<Coordinates> {
 			longitude: parseFloat(data[0].lon)
 		};
 	} catch (error) {
-		throw new Error(`Geocoding failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+		throw new Error(`Geocoding failed for "${address}": ${error instanceof Error ? error.message : 'Unknown error'}`);
 	}
 }
 
 /**
- * Create territory boundaries from zip codes and cities
- * This is a simplified approach - in practice you'd want more precise boundaries
+ * Create territory boundaries from the actual API response structure
+ * Handle both geofence and radius-based territories
  */
-async function createTerritoryBoundaries(territory: Territory): Promise<TerritoryWithBoundaries> {
-	// For now, we'll create approximate boundaries based on zip codes and cities
-	// In a real implementation, you'd have actual geographic polygon data
-	
+function createTerritoryBoundaries(territory: any): TerritoryWithBoundaries {
 	const boundaries: Coordinates[] = [];
 	let center: Coordinates | undefined;
 	
-	try {
-		// If we have zip codes, use them to define territory boundaries
-		if (territory.zip_codes && territory.zip_codes.length > 0) {
-			for (const zipCode of territory.zip_codes.slice(0, 5)) { // Limit to avoid rate limiting
-				try {
-					const coords = await geocodeAddress(zipCode);
-					boundaries.push(coords);
-					if (!center) {
-						center = coords;
-					}
-				} catch (error) {
-					console.warn(`Failed to geocode zip code ${zipCode}:`, error);
-				}
-			}
+	// Set center from territory location
+	if (territory.location?.lat && territory.location?.lng) {
+		center = {
+			latitude: territory.location.lat,
+			longitude: territory.location.lng
+		};
+	}
+	
+	// Handle geofence-based territories
+	if (territory.service_area?.type === "geofence" && territory.service_area.geofence_points?.length > 0) {
+		for (const point of territory.service_area.geofence_points) {
+			boundaries.push({
+				latitude: point.lat,
+				longitude: point.lng
+			});
 		}
+	}
+	// Handle radius-based territories
+	else if (territory.service_area?.type === "radius" && territory.service_area.radius && center) {
+		const radiusMiles = territory.service_area.radius;
+		const offset = radiusMiles * 0.015; // Approximate degrees per mile
 		
-		// If we have cities, use them as additional boundary points
-		if (territory.cities && territory.cities.length > 0 && boundaries.length < 3) {
-			for (const city of territory.cities.slice(0, 3)) {
-				try {
-					const cityAddress = territory.states && territory.states[0] 
-						? `${city}, ${territory.states[0]}` 
-						: city;
-					const coords = await geocodeAddress(cityAddress);
-					boundaries.push(coords);
-					if (!center) {
-						center = coords;
-					}
-				} catch (error) {
-					console.warn(`Failed to geocode city ${city}:`, error);
-				}
-			}
-		}
-		
-		// If we don't have enough points for a polygon, create a simple radius-based territory
-		if (boundaries.length < 3 && center) {
-			// Create a simple square around the center point (approximately 10 mile radius)
-			const offset = 0.15; // roughly 10 miles in degrees
-			boundaries.push(
-				{ latitude: center.latitude + offset, longitude: center.longitude + offset },
-				{ latitude: center.latitude + offset, longitude: center.longitude - offset },
-				{ latitude: center.latitude - offset, longitude: center.longitude - offset },
-				{ latitude: center.latitude - offset, longitude: center.longitude + offset }
-			);
-		}
-		
-	} catch (error) {
-		console.warn(`Failed to create boundaries for territory ${territory.name}:`, error);
+		// Create a square around the center point
+		boundaries.push(
+			{ latitude: center.latitude + offset, longitude: center.longitude + offset },
+			{ latitude: center.latitude + offset, longitude: center.longitude - offset },
+			{ latitude: center.latitude - offset, longitude: center.longitude - offset },
+			{ latitude: center.latitude - offset, longitude: center.longitude + offset }
+		);
 	}
 	
 	return {
@@ -151,17 +127,20 @@ export const checkTerritoryCoverageTool: ToolImplementation = {
 			const addressCoords = await geocodeAddress(params.address);
 			
 			// Fetch all territories from the API
-			const territoriesResponse = await makeZenbookerRequest("/territories", "GET", undefined, apiKey) as unknown as TerritoriesResponse;
+			const territoriesResponse = await makeZenbookerRequest("/territories", "GET", undefined, apiKey) as unknown as any;
+			
+			// Handle the actual API response structure - it returns an object with results array
+			const territories = territoriesResponse.results || [];
 			
 			const results = [];
 			let coveredByTerritory: TerritoryWithBoundaries | null = null;
 			let closestTerritory: { territory: TerritoryWithBoundaries; distance: number } | null = null;
 			
 			// Check each territory for coverage
-			for (const territory of territoriesResponse.results) {
-				if (!territory.active) continue; // Skip inactive territories
+			for (const territory of territories) {
+				if (!territory.enabled) continue; // Skip inactive territories (API uses 'enabled' not 'active')
 				
-				const territoryWithBoundaries = await createTerritoryBoundaries(territory);
+				const territoryWithBoundaries = createTerritoryBoundaries(territory);
 				
 				// Check if the address is within the territory boundaries
 				if (territoryWithBoundaries.boundaries && territoryWithBoundaries.boundaries.length >= 3) {
