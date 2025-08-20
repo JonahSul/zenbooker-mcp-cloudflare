@@ -14,6 +14,9 @@ export * from "./territories.js";
 export * from "./coupons.js";
 export * from "./scheduling.js";
 
+// Memory system integration
+export * from "../../memory-system/index.js";
+
 // Import all tool arrays
 import { jobsTools } from "./jobs.js";
 import { customerTools } from "./customers.js";
@@ -24,6 +27,7 @@ import { recurringBookingTools } from "./recurring-bookings.js";
 import { territoryTools } from "./territories.js";
 import { couponTools } from "./coupons.js";
 import { schedulingTools } from "./scheduling.js";
+import { memoryTools } from "../../memory-system/index.js";
 
 /**
  * All available tools grouped by category
@@ -38,6 +42,7 @@ export const toolsByCategory = {
 	territories: territoryTools,
 	coupons: couponTools,
 	scheduling: schedulingTools,
+	memory: memoryTools,
 } as const;
 
 /**
@@ -53,6 +58,7 @@ export const allTools = [
 	...territoryTools,
 	...couponTools,
 	...schedulingTools,
+	...memoryTools,
 ] as const;
 
 /**

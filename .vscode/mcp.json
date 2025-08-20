@@ -3,6 +3,10 @@
 		"zenbooker-mcp-cloudflare": {
 			"url": "https://zenbooker-mcp.sprinklerblowout.workers.dev/sse",
 			"type": "http"
+		},
+		"memory-system": {
+			"url": "https://memory-system-mcp.sprinklerblowout.workers.dev/sse",
+			"type": "http"
 		}
 	},
 	"inputs": []

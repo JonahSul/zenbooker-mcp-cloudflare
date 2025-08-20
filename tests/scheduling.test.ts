@@ -25,29 +25,58 @@ describe("Scheduling Management Tools", () => {
 		});
 
 		it("should check if address is in serviced territory", async () => {
-			const mockResponse: ApiResponse = {
-				success: true,
-				data: {
-					covered: true,
-					territory_id: "territory-123",
-					territory_name: "Downtown Area",
-					service_radius: 10,
-					estimated_travel_time: 15
-				}
+			// Mock geocoding response
+			const mockGeocodingResponse = [{
+				lat: "34.0522",
+				lon: "-118.2437",
+				display_name: "123 Main St, Anytown, CA 90210"
+			}];
+
+			// Mock territories response
+			const mockTerritoriesResponse = {
+				results: [{
+					id: "territory-123",
+					name: "Downtown Area",
+					enabled: true,
+					location: { lat: 34.0522, lng: -118.2437 },
+					geofence_points: [
+						{ lat: 34.0500, lng: -118.2500 },
+						{ lat: 34.0500, lng: -118.2400 },
+						{ lat: 34.0550, lng: -118.2400 },
+						{ lat: 34.0550, lng: -118.2500 }
+					]
+				}]
 			};
 
-			(global.fetch as any).mockResolvedValueOnce({
-				ok: true,
-				json: () => Promise.resolve(mockResponse),
-			});
+			// Mock both fetch calls
+			(global.fetch as any)
+				.mockResolvedValueOnce({
+					ok: true,
+					json: () => Promise.resolve(mockGeocodingResponse),
+				})
+				.mockResolvedValueOnce({
+					ok: true,
+					json: () => Promise.resolve(mockTerritoriesResponse),
+				});
 
 			const result = await checkTerritoryCoverageTool.handler(
 				{ address: "123 Main St, Anytown, CA 90210" },
 				mockApiKey
 			);
 
-			expect(global.fetch).toHaveBeenCalledWith(
-				"https://api.zenbooker.com/v1/territories/check-coverage?address=123+Main+St%2C+Anytown%2C+CA+90210",
+			// Check that geocoding was called first
+			expect(global.fetch).toHaveBeenNthCalledWith(1,
+				"https://nominatim.openstreetmap.org/search?format=json&q=123%20Main%20St%2C%20Anytown%2C%20CA%2090210&limit=1",
+				expect.objectContaining({
+					headers: expect.objectContaining({
+						"User-Agent": "ZenbookerMCP/1.0 (contact@example.com)",
+					}),
+				})
+			);
+
+			// Check that territories API was called
+			expect(global.fetch).toHaveBeenNthCalledWith(2,
+				"https://api.zenbooker.com/v1/territories",
 				expect.objectContaining({
 					method: "GET",
 					headers: expect.objectContaining({
@@ -62,29 +91,46 @@ describe("Scheduling Management Tools", () => {
 		});
 
 		it("should handle address not in any territory", async () => {
-			const mockResponse: ApiResponse = {
-				success: true,
-				data: {
-					covered: false,
-					nearest_territory: {
-						territory_id: "territory-456",
-						territory_name: "Suburban Area",
-						distance_miles: 5.2
-					}
-				}
+			// Mock geocoding response for an address that won't be in any territory
+			const mockGeocodingResponse = [{
+				lat: "40.7128",
+				lon: "-74.0060",
+				display_name: "999 Remote Lane, Faraway, CA 90211"
+			}];
+
+			// Mock territories response - territories that won't include the address
+			const mockTerritoriesResponse = {
+				results: [{
+					id: "territory-456",
+					name: "Suburban Area",
+					enabled: true,
+					location: { lat: 34.0522, lng: -118.2437 },
+					geofence_points: [
+						{ lat: 34.0500, lng: -118.2500 },
+						{ lat: 34.0500, lng: -118.2400 },
+						{ lat: 34.0550, lng: -118.2400 },
+						{ lat: 34.0550, lng: -118.2500 }
+					]
+				}]
 			};
 
-			(global.fetch as any).mockResolvedValueOnce({
-				ok: true,
-				json: () => Promise.resolve(mockResponse),
-			});
+			// Mock both fetch calls
+			(global.fetch as any)
+				.mockResolvedValueOnce({
+					ok: true,
+					json: () => Promise.resolve(mockGeocodingResponse),
+				})
+				.mockResolvedValueOnce({
+					ok: true,
+					json: () => Promise.resolve(mockTerritoriesResponse),
+				});
 
 			const result = await checkTerritoryCoverageTool.handler(
 				{ address: "999 Remote Lane, Faraway, CA 90211" },
 				mockApiKey
 			);
 
-			expect(result.content[0].text).toContain("covered\": false");
+			expect(result.content[0].text).toContain("❌ NOT COVERED");
 			expect(result.content[0].text).toContain("territory-456");
 		});
 	});
