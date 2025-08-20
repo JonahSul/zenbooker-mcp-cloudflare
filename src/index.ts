@@ -153,6 +153,7 @@ export class ZenbookerMCP extends McpAgent {
 		// List all jobs
 		this.server.tool(
 			"list_jobs",
+			"Retrieve a paginated list of jobs with optional filtering by customer, status, and date range. Returns job details including status, customer information, and scheduling data.",
 			{
 				cursor: z.number().optional().describe("Pagination cursor for retrieving the next set of results"),
 				limit: z.number().min(1).max(100).optional().describe("Maximum number of jobs to return (1-100, defaults to API default)"),
@@ -175,6 +176,7 @@ export class ZenbookerMCP extends McpAgent {
 		// Get a specific job
 		this.server.tool(
 			"get_job",
+			"Retrieve detailed information for a specific job by its unique ID. Returns comprehensive job data including customer details, scheduling, status, and service information.",
 			{
 				id: z.string().describe("The unique job ID to retrieve detailed information for"),
 			},
@@ -191,6 +193,7 @@ export class ZenbookerMCP extends McpAgent {
 		// List all customers
 		this.server.tool(
 			"list_customers",
+			"Retrieve a paginated list of customers with optional search and filtering capabilities. Search by name, email, or phone number to find specific customers.",
 			{
 				cursor: z.number().optional().describe("Pagination cursor for retrieving the next set of results"),
 				limit: z.number().min(1).max(100).optional().describe("Maximum number of customers to return (1-100, defaults to API default)"),
@@ -212,6 +215,7 @@ export class ZenbookerMCP extends McpAgent {
 		// Get a specific customer
 		this.server.tool(
 			"get_customer",
+			"Retrieve detailed information for a specific customer by their unique ID. Returns complete customer profile including contact information, address, and account details.",
 			{
 				id: z.string().describe("The unique customer ID to retrieve detailed information for"),
 			},
@@ -226,6 +230,7 @@ export class ZenbookerMCP extends McpAgent {
 		// Create a new customer
 		this.server.tool(
 			"create_customer",
+			"Create a new customer record in the Zenbooker system. Requires first and last name, with optional contact information including email, phone, address, and notes.",
 			{
 				first_name: z.string().describe("Customer's first name (required)"),
 				last_name: z.string().describe("Customer's last name (required)"),
@@ -249,6 +254,7 @@ export class ZenbookerMCP extends McpAgent {
 		// Update a customer
 		this.server.tool(
 			"update_customer",
+			"Update an existing customer's information. Provide the customer ID and any fields you want to modify. All fields except ID are optional and only provided fields will be updated.",
 			{
 				id: z.string().describe("The unique customer ID to update"),
 				first_name: z.string().optional().describe("Updated first name for the customer"),
@@ -274,6 +280,7 @@ export class ZenbookerMCP extends McpAgent {
 		// List all invoices
 		this.server.tool(
 			"list_invoices",
+			"Retrieve a paginated list of invoices with optional filtering by customer, status, and date range. Returns invoice details including amounts, due dates, and payment status.",
 			{
 				cursor: z.number().optional().describe("Pagination cursor for retrieving the next set of results"),
 				limit: z.number().min(1).max(100).optional().describe("Maximum number of invoices to return (1-100, defaults to API default)"),
@@ -283,13 +290,7 @@ export class ZenbookerMCP extends McpAgent {
 				end_date: z.string().optional().describe("Filter invoices created on or before this date (ISO 8601 format: YYYY-MM-DD)"),
 			},
 			async (params) => {
-				const queryParams = new URLSearchParams();
-				Object.entries(params).forEach(([key, value]) => {
-					if (value !== undefined) {
-						queryParams.append(key, String(value));
-					}
-				});
-				
+				const queryParams = buildQueryParams(params);
 				const endpoint = `/invoices${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 				const result = await makeZenbookerRequest(endpoint, "GET", undefined, this.getEnvironmentApiKey());
 				
@@ -302,6 +303,7 @@ export class ZenbookerMCP extends McpAgent {
 		// Get a specific invoice
 		this.server.tool(
 			"get_invoice",
+			"Retrieve detailed information for a specific invoice by its unique ID. Returns comprehensive invoice data including line items, payment history, and customer details.",
 			{
 				id: z.string().describe("The unique invoice ID to retrieve detailed information for"),
 			},
@@ -318,6 +320,7 @@ export class ZenbookerMCP extends McpAgent {
 		// List all transactions
 		this.server.tool(
 			"list_transactions",
+			"Retrieve a paginated list of payment transactions with optional filtering by customer, invoice, and date range. Returns transaction details including amounts, payment methods, and status.",
 			{
 				cursor: z.number().optional().describe("Pagination cursor for retrieving the next set of results"),
 				limit: z.number().min(1).max(100).optional().describe("Maximum number of transactions to return (1-100, defaults to API default)"),
@@ -327,13 +330,7 @@ export class ZenbookerMCP extends McpAgent {
 				end_date: z.string().optional().describe("Filter transactions created on or before this date (ISO 8601 format: YYYY-MM-DD)"),
 			},
 			async (params) => {
-				const queryParams = new URLSearchParams();
-				Object.entries(params).forEach(([key, value]) => {
-					if (value !== undefined) {
-						queryParams.append(key, String(value));
-					}
-				});
-				
+				const queryParams = buildQueryParams(params);
 				const endpoint = `/transactions${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 				const result = await makeZenbookerRequest(endpoint, "GET", undefined, this.getEnvironmentApiKey());
 				
@@ -348,19 +345,14 @@ export class ZenbookerMCP extends McpAgent {
 		// List all team members
 		this.server.tool(
 			"list_team_members",
+			"Retrieve a paginated list of team members (service providers and staff) with optional filtering by active status. Returns team member profiles including contact information, roles, and availability.",
 			{
 				cursor: z.number().optional().describe("Pagination cursor for retrieving the next set of results"),
 				limit: z.number().min(1).max(100).optional().describe("Maximum number of team members to return (1-100, defaults to API default)"),
 				active: z.boolean().optional().describe("Filter team members by active status (true for active, false for inactive)"),
 			},
 			async (params) => {
-				const queryParams = new URLSearchParams();
-				Object.entries(params).forEach(([key, value]) => {
-					if (value !== undefined) {
-						queryParams.append(key, String(value));
-					}
-				});
-				
+				const queryParams = buildQueryParams(params);
 				const endpoint = `/team_members${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 				const result = await makeZenbookerRequest(endpoint, "GET", undefined, this.getEnvironmentApiKey());
 				
@@ -375,6 +367,7 @@ export class ZenbookerMCP extends McpAgent {
 		// List all recurring bookings (max 40 per request)
 		this.server.tool(
 			"list_recurring_bookings",
+			"Retrieve a paginated list of recurring service bookings with optional filtering by customer and active status. Returns scheduled recurring services including frequency, timing, and next service dates. Limited to 40 results per request due to data complexity.",
 			{
 				cursor: z.number().optional().describe("Pagination cursor for retrieving the next set of results"),
 				limit: z.number().min(1).max(40).optional().describe("Maximum number of recurring bookings to return (1-40, lower limit due to data complexity)"),
@@ -382,13 +375,7 @@ export class ZenbookerMCP extends McpAgent {
 				active: z.boolean().optional().describe("Filter recurring bookings by active status (true for active, false for inactive)"),
 			},
 			async (params) => {
-				const queryParams = new URLSearchParams();
-				Object.entries(params).forEach(([key, value]) => {
-					if (value !== undefined) {
-						queryParams.append(key, String(value));
-					}
-				});
-				
+				const queryParams = buildQueryParams(params);
 				const endpoint = `/recurring${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 				const result = await makeZenbookerRequest(endpoint, "GET", undefined, this.getEnvironmentApiKey());
 				
@@ -403,18 +390,13 @@ export class ZenbookerMCP extends McpAgent {
 		// List all service territories
 		this.server.tool(
 			"list_territories",
+			"Retrieve a paginated list of service territories and coverage areas. Returns geographic regions where services are provided, including ZIP codes, cities, and service boundaries.",
 			{
 				cursor: z.number().optional().describe("Pagination cursor for retrieving the next set of results"),
 				limit: z.number().min(1).max(100).optional().describe("Maximum number of territories to return (1-100, defaults to API default)"),
 			},
 			async (params) => {
-				const queryParams = new URLSearchParams();
-				Object.entries(params).forEach(([key, value]) => {
-					if (value !== undefined) {
-						queryParams.append(key, String(value));
-					}
-				});
-				
+				const queryParams = buildQueryParams(params);
 				const endpoint = `/territories${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
 				const result = await makeZenbookerRequest(endpoint, "GET", undefined, this.getEnvironmentApiKey());
 				
@@ -429,6 +411,7 @@ export class ZenbookerMCP extends McpAgent {
 		// Create a coupon
 		this.server.tool(
 			"create_coupon",
+			"Create a new promotional discount coupon for customers. Supports both percentage-based and fixed-amount discounts with optional validity dates, usage limits, and minimum order requirements.",
 			{
 				code: z.string().describe("Unique coupon code that customers will use (e.g., 'SAVE20', 'WELCOME10')"),
 				name: z.string().describe("Display name for the coupon (e.g., '20% Off Spring Cleaning')"),
