@@ -12,6 +12,7 @@ export * from "./team-members.js";
 export * from "./recurring-bookings.js";
 export * from "./territories.js";
 export * from "./coupons.js";
+export * from "./scheduling.js";
 
 // Import all tool arrays
 import { jobsTools } from "./jobs.js";
@@ -22,6 +23,7 @@ import { teamMemberTools } from "./team-members.js";
 import { recurringBookingTools } from "./recurring-bookings.js";
 import { territoryTools } from "./territories.js";
 import { couponTools } from "./coupons.js";
+import { schedulingTools } from "./scheduling.js";
 
 /**
  * All available tools grouped by category
@@ -35,6 +37,7 @@ export const toolsByCategory = {
 	recurringBookings: recurringBookingTools,
 	territories: territoryTools,
 	coupons: couponTools,
+	scheduling: schedulingTools,
 } as const;
 
 /**
@@ -49,6 +52,7 @@ export const allTools = [
 	...recurringBookingTools,
 	...territoryTools,
 	...couponTools,
+	...schedulingTools,
 ] as const;
 
 /**
