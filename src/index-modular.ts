@@ -8,11 +8,79 @@ interface Env {
 	ZENBOOKER_API_KEY?: string;
 }
 
+// Type definitions for API request/response data
+type ApiRequestBody = Record<string, unknown>;
+
 interface ZenbookerEnvironment {
 	ZENBOOKER_API_KEY?: string;
 }
 
+// Zenbooker API base URL
+const ZENBOOKER_API_BASE = "https://api.zenbooker.com/v1";
 
+/**
+ * Helper function to build query string from parameters object
+ * 
+ * @param params - Object containing query parameters
+ * @returns URLSearchParams instance with non-undefined values
+ */
+function buildQueryParams(params: Record<string, unknown>): URLSearchParams {
+	const queryParams = new URLSearchParams();
+	Object.entries(params).forEach(([key, value]) => {
+		if (value !== undefined) {
+			queryParams.append(key, String(value));
+		}
+	});
+	return queryParams;
+}
+
+/**
+ * Helper function to make authenticated API requests to the Zenbooker API
+ * 
+ * @param endpoint - The API endpoint path (e.g., '/customers', '/jobs/123')
+ * @param method - HTTP method (GET, POST, PATCH, etc.)
+ * @param body - Request body data for POST/PATCH requests
+ * @param apiKey - Zenbooker API key for authentication
+ * @returns Promise resolving to the parsed JSON response
+ * @throws Error if API key is missing or API request fails
+ */
+async function makeZenbookerRequest(
+	endpoint: string,
+	method: string = "GET",
+	body?: ApiRequestBody,
+	apiKey?: string
+): Promise<ApiResponse> {
+	// Try to get API key from parameter, then global, then environment
+	const effectiveApiKey = apiKey || globalApiKey;
+	
+	if (!effectiveApiKey) {
+		throw new Error("Zenbooker API key is required. Please set the ZENBOOKER_API_KEY environment variable.");
+	}
+
+	const url = `${ZENBOOKER_API_BASE}${endpoint}`;
+	const headers: HeadersInit = {
+		"Authorization": `Bearer ${effectiveApiKey}`,
+		"Content-Type": "application/json",
+	};
+
+	const config: RequestInit = {
+		method,
+		headers,
+	};
+
+	if (body && method !== "GET") {
+		config.body = JSON.stringify(body);
+	}
+
+	const response = await fetch(url, config);
+	
+	if (!response.ok) {
+		const errorText = await response.text();
+		throw new Error(`Zenbooker API Error (${response.status}): ${errorText}`);
+	}
+
+	return response.json();
+}
 
 /**
  * Global API key storage for the main Worker context
